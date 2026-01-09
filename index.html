@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Juntar PDFs - 3 campos (com persistência)</title>
+
+  <style>
+    :root{
+      --blue:#2f74df;
+      --blue2:#1f5fd6;
+      --gray:#e6e6e6;
+      --shadow: 0 10px 24px rgba(0,0,0,.08);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      color:#1f2937;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:32px 16px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(47,116,223,.12) 0 2px, transparent 3px) 0 0/12px 12px,
+        radial-gradient(circle at 70% 60%, rgba(47,116,223,.08) 0 2px, transparent 3px) 0 0/14px 14px,
+        #f7f7f7;
+    }
+    .page{ width:min(920px, 100%); }
+    .topbar{
+      display:flex; align-items:center; gap:14px;
+      background: var(--blue); color:#fff;
+      border-radius:14px; padding:16px 20px;
+      box-shadow: var(--shadow); position:relative; overflow:hidden;
+      margin-bottom:16px;
+    }
+    .topbar::after{
+      content:""; position:absolute; right:-40px; top:-40px;
+      width:160px; height:160px; border-radius:50%;
+      background:rgba(255,255,255,.12);
+    }
+    .badge{
+      width:56px; height:56px; border-radius:16px;
+      background: rgba(255,255,255,.14);
+      display:grid; place-items:center; flex:0 0 auto;
+    }
+    .badge svg{ width:34px; height:34px; fill:none; stroke:#fff; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+    .topbar h2{ margin:0; font-size:26px; letter-spacing:.5px; font-weight:800; }
+
+    .card{
+      background: rgba(255,255,255,.85);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:18px;
+      padding:34px 30px 26px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(2px);
+    }
+    .title{ text-align:center; margin:0 0 10px; color: var(--blue2); font-size:28px; font-weight:800; }
+    .subtitle{ text-align:center; margin:0 auto 22px; max-width:720px; color: #6b7280; font-size:16px; line-height:1.4; }
+
+    .block{ max-width:720px; margin:0 auto; display:grid; gap:12px; }
+    .row{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:14px;
+      padding:14px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.05);
+    }
+    .row h3{ margin:0 0 10px; font-size:16px; color:#111827; font-weight:800; }
+    .row label{ display:block; font-size:12px; color:#6b7280; margin:8px 0 6px; font-weight:700; }
+    textarea, input[type="file"]{
+      width:100%;
+      border:0;
+      background: var(--gray);
+      border-radius:10px;
+      padding:12px 12px;
+      font-size:14px;
+      outline:none;
+    }
+    textarea{ resize: vertical; min-height:70px; }
+
+    .actions{
+      max-width:720px;
+      margin:18px auto 0;
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .btn{
+      border:0;
+      border-radius:12px;
+      padding:12px 18px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow: var(--shadow);
+      transition: transform .05s ease, filter .15s ease;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn-primary{ background: var(--blue2); color:#fff; }
+    .btn-primary:hover{ filter:brightness(.95); }
+    .btn-ghost{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.15);
+      color:#111827;
+      box-shadow:none;
+    }
+
+    .listwrap{
+      max-width:720px;
+      margin:18px auto 0;
+      background: rgba(255,255,255,.9);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:14px;
+      padding:14px;
+    }
+    .listwrap h4{ margin:0 0 10px; font-size:14px; color:#111827; font-weight:900; }
+    ul{ margin:0; padding-left:18px; color:#374151; font-size:13px; }
+    .hint{ margin-top:10px; font-size:12px; color:#6b7280; }
+
+    .li-row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      margin:6px 0;
+    }
+    .li-row span{ flex:1; }
+    .mini{
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,.15);
+      background:#fff;
+      cursor:pointer;
+      font-weight:800;
+    }
+
+    @media (max-width:720px){
+      .card{ padding:22px 16px; }
+      .title{ font-size:22px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="badge">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 4v4"/>
+          <path d="M7 20h10"/>
+          <path d="M8 8l4 10"/>
+          <path d="M16 8l-4 10"/>
+          <circle cx="12" cy="6.5" r="1.2"/>
+        </svg>
+      </div>
+      <h2>APRESENTAÇÃO</h2>
+    </header>
+
+    <main class="card">
+      <h1 class="title">Formulário + Anexos (PDF)</h1>
+      <p class="subtitle">
+        ✅ Textos e PDFs ficam <b>salvos no navegador</b>. Ao dar F5, eles voltam.
+        <br><small style="color:#6b7280">(Obs.: o input file não “repreenche”, mas os PDFs ficam guardados e podem ser juntados normalmente.)</small>
+      </p>
+
+      <div class="block">
+        <div class="row">
+          <h3>Campo 01</h3>
+          <label>Texto</label>
+          <textarea class="texto" data-field="1" placeholder="Digite o texto do campo 01 (opcional)"></textarea>
+          <label>Anexar PDFs (pode selecionar vários)</label>
+          <input class="pdfs" data-field="1" type="file" accept="application/pdf" multiple />
+        </div>
+
+        <div class="row">
+          <h3>Campo 02</h3>
+          <label>Texto</label>
+          <textarea class="texto" data-field="2" placeholder="Digite o texto do campo 02 (opcional)"></textarea>
+          <label>Anexar PDFs (pode selecionar vários)</label>
+          <input class="pdfs" data-field="2" type="file" accept="application/pdf" multiple />
+        </div>
+
+        <div class="row">
+          <h3>Campo 03</h3>
+          <label>Texto</label>
+          <textarea class="texto" data-field="3" placeholder="Digite o texto do campo 03 (opcional)"></textarea>
+          <label>Anexar PDFs (pode selecionar vários)</label>
+          <input class="pdfs" data-field="3" type="file" accept="application/pdf" multiple />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-ghost" id="btnLimpar" type="button">Limpar tudo (inclui anexos salvos)</button>
+        <button class="btn btn-primary" id="btnJuntar" type="button" disabled>Juntar PDFs</button>
+      </div>
+
+      <div class="listwrap">
+        <h4>Arquivos salvos (persistem após F5)</h4>
+        <ul id="lista"></ul>
+        <div class="hint">
+          A ordem do PDF final será: Campo 01 → Campo 02 → Campo 03 (na ordem da lista).
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- pdf-lib para juntar PDFs -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+  <script>
+    /*****************************************************************
+     * 1) Persistência de TEXTOS (localStorage)
+     *****************************************************************/
+    const LS_KEY = 'form_textos_v1';
+
+    function loadTexts() {
+      try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); }
+      catch { return {}; }
+    }
+
+    function saveTexts(textMap) {
+      localStorage.setItem(LS_KEY, JSON.stringify(textMap));
+    }
+
+    /*****************************************************************
+     * 2) Persistência de PDFs (IndexedDB)
+     *    - Guardamos os bytes (ArrayBuffer) para poder juntar depois.
+     *****************************************************************/
+    const DB_NAME = 'pdf_persist_db_v1';
+    const STORE   = 'pdfs';
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(STORE)) {
+            // key auto-increment para cada arquivo salvo
+            db.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+          }
+        };
+
+        req.onsuccess = () => resolve(req.result);
+        req.onerror   = () => reject(req.error);
+      });
+    }
+
+    async function addPdfRecord(record) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).add(record);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function getAllPdfs() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const req = tx.objectStore(STORE).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function deletePdf(id) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).delete(id);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function clearAllPdfs() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).clear();
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    /*****************************************************************
+     * 3) UI e lógica
+     *****************************************************************/
+    const fileInputs = document.querySelectorAll('.pdfs');
+    const textAreas  = document.querySelectorAll('.texto');
+    const btnJuntar  = document.getElementById('btnJuntar');
+    const btnLimpar  = document.getElementById('btnLimpar');
+    const lista      = document.getElementById('lista');
+
+    // Restaura textos do localStorage ao abrir a página
+    function restoreTextareas() {
+      const data = loadTexts();
+      textAreas.forEach(t => {
+        const field = t.dataset.field;
+        t.value = data[field] || '';
+      });
+    }
+
+    // Salva texto ao digitar
+    function bindTextPersistence() {
+      textAreas.forEach(t => {
+        t.addEventListener('input', () => {
+          const data = loadTexts();
+          data[t.dataset.field] = t.value;
+          saveTexts(data);
+        });
+      });
+    }
+
+    // Renderiza lista de PDFs salvos no IndexedDB
+    async function renderSavedList() {
+      const items = await getAllPdfs();
+
+      // Ordena por campo (1..3) e por data de inclusão
+      items.sort((a,b) => (a.field - b.field) || (a.addedAt - b.addedAt));
+
+      lista.innerHTML = '';
+
+      if (!items.length) {
+        const li = document.createElement('li');
+        li.textContent = 'Nenhum PDF salvo.';
+        lista.appendChild(li);
+        btnJuntar.disabled = true;
+        return;
+      }
+
+      items.forEach((it) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'li-row';
+
+        const label = document.createElement('span');
+        const kb = Math.round((it.size || 0) / 1024);
+        label.textContent = `Campo ${it.field} — ${it.name} (${kb} KB)`;
+
+        const del = document.createElement('button');
+        del.className = 'mini';
+        del.type = 'button';
+        del.textContent = 'Remover';
+        del.addEventListener('click', async () => {
+          await deletePdf(it.id);
+          await renderSavedList();
+        });
+
+        wrap.appendChild(label);
+        wrap.appendChild(del);
+
+        const li = document.createElement('li');
+        li.style.listStyle = 'none';
+        li.appendChild(wrap);
+        lista.appendChild(li);
+      });
+
+      btnJuntar.disabled = false;
+    }
+
+    // Quando o usuário escolhe arquivos: salva cada PDF no IndexedDB
+    function bindFilePersistence() {
+      fileInputs.forEach(inp => {
+        inp.addEventListener('change', async () => {
+          const field = Number(inp.dataset.field);
+          const files = inp.files ? [...inp.files] : [];
+
+          for (const file of files) {
+            if (file.type !== 'application/pdf') continue;
+
+            const bytes = await file.arrayBuffer();
+
+            await addPdfRecord({
+              field,
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              addedAt: Date.now(),
+              data: bytes // ArrayBuffer salvo!
+            });
+          }
+
+          // Limpa o input para permitir selecionar o mesmo arquivo novamente, se quiser
+          inp.value = '';
+
+          // Atualiza a lista
+          await renderSavedList();
+        });
+      });
+    }
+
+    // Junta PDFs usando o que está salvo no IndexedDB
+    btnJuntar.addEventListener('click', async () => {
+      try {
+        btnJuntar.disabled = true;
+        const old = btnJuntar.textContent;
+        btnJuntar.textContent = 'Juntando...';
+
+        const items = await getAllPdfs();
+        items.sort((a,b) => (a.field - b.field) || (a.addedAt - b.addedAt));
+
+        if (!items.length) {
+          alert('Não há PDFs salvos para juntar.');
+          btnJuntar.textContent = old;
+          btnJuntar.disabled = true;
+          return;
+        }
+
+        const mergedPdf = await PDFLib.PDFDocument.create();
+
+        for (const it of items) {
+          const pdf = await PDFLib.PDFDocument.load(it.data);
+          const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+          pages.forEach(p => mergedPdf.addPage(p));
+        }
+
+        const mergedBytes = await mergedPdf.save();
+
+        const blob = new Blob([mergedBytes], { type: 'application/pdf' });
+        const url  = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'pdf_unificado.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        URL.revokeObjectURL(url);
+
+        btnJuntar.textContent = old;
+        btnJuntar.disabled = false;
+
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao juntar PDFs. Veja o console (F12).');
+        btnJuntar.textContent = 'Juntar PDFs';
+        await renderSavedList();
+      }
+    });
+
+    // Limpa tudo (textos + PDFs salvos)
+    btnLimpar.addEventListener('click', async () => {
+      if (!confirm('Isso vai apagar os textos e TODOS os PDFs salvos no navegador. Continuar?')) return;
+
+      // Limpa textos
+      localStorage.removeItem(LS_KEY);
+      textAreas.forEach(t => t.value = '');
+
+      // Limpa PDFs
+      await clearAllPdfs();
+
+      // Limpa inputs (se tiver algo selecionado)
+      fileInputs.forEach(i => i.value = '');
+
+      // Atualiza lista
+      await renderSavedList();
+    });
+
+    /*****************************************************************
+     * Inicialização
+     *****************************************************************/
+    (async function init() {
+      restoreTextareas();
+      bindTextPersistence();
+      bindFilePersistence();
+      await renderSavedList();
+    })();
+  </script>
+</body>
+</html>

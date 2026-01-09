@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Microcredenciais - UVPR</title>
+
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
+
+  <!-- Styles / Scripts -->
+  <link rel="preload" as="style" href="https://clinica.dimensao.online/build/assets/app-BHI3wORe.css">
+  <link rel="modulepreload" href="https://clinica.dimensao.online/build/assets/app-DLxUe-O8.js">
+  <link rel="stylesheet" href="https://clinica.dimensao.online/build/assets/app-BHI3wORe.css">
+  <script type="module" src="https://clinica.dimensao.online/build/assets/app-DLxUe-O8.js"></script>
+
+  <style>
+    html, body { height: 100%; font-family: Figtree, Arial, Helvetica, sans-serif; }
+
+    /* fundo no BODY */
+    body {
+      background-color: #f5f7fa !important;
+
+      /* tente primeiro caminho ABSOLUTO (Laravel/public) */
+      background-image:
+        url("/images/micro.png"),
+        url("/images/uvpr.png") !important;
+
+      background-repeat: no-repeat, no-repeat !important;
+
+      background-position:
+        left 28px top 28px,
+        right 28px bottom 28px !important;
+
+      background-size:
+        320px auto,
+        360px auto !important;
+    }
+
+    /* se estiver no mobile */
+    @media (max-width: 768px) {
+      body {
+        background-position:
+          center top 18px,
+          center bottom 18px !important;
+        background-size:
+          220px auto,
+          240px auto !important;
+      }
+    }
+
+    /* “vidro” para leitura */
+    .glass {
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1; transform: translateY(0);} }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+    .animate-fadeIn { animation: fadeIn 1s ease-out; }
+    .animate-fadeInUp { animation: fadeInUp 1s ease-out; }
+    .delay-300 { animation-delay: 0.3s; }
+  </style>
+</head>
+
+<body class="bg-white" cz-shortcut-listen="true">
+  <div class="min-h-screen flex flex-col items-center justify-center px-4">
+
+    <header class="mb-10 text-center animate-fadeIn">
+      <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-800">
+        Microcredenciais <span class="text-blue-600">Paraná</span>
+      </h1>
+
+      <p class="mt-4 text-lg md:text-xl text-slate-600 font-medium">
+        Acesse sua conta para acompanhar cursos e certificações.
+      </p>
+
+      <div class="mt-6 max-w-2xl mx-auto glass rounded-2xl p-4 md:p-5 shadow-sm">
+        <p class="text-sm md:text-base text-slate-700">
+          Se você não possui conta, faça seu cadastro e comece agora.
+        </p>
+      </div>
+    </header>
+
+    <div class="flex flex-wrap justify-center gap-6 animate-fadeInUp">
+      <a href="formulario.html"
+         class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-300 focus:ring-4 focus:ring-blue-300">
+        Acessar
+      </a>
+
+     <!-- <a href="https://clinica.dimensao.online/register"
+         class="px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-300 focus:ring-4 focus:ring-green-300">
+        Cadastre-se
+      </a> -->
+    </div>
+
+    <footer class="mt-16 text-center text-slate-500 text-sm opacity-80 animate-fadeInUp delay-300">
+      <p>UVPR • Universidade Virtual do Paraná</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tópicos em Destaque + PDF + Drive</title>
+
+  <!-- Bootswatch (já inclui Bootstrap) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/litera/bootstrap.min.css">
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Bootstrap JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+
+  <!-- pdf-lib -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js" defer></script>
+
+  <!-- Seu JS -->
+  <script src="./javascript.js" defer></script>
+
+  <style>
+    body{
+      background:
+        radial-gradient(circle at 15% 10%, rgba(13,110,253,.12) 0 2px, transparent 3px) 0 0/14px 14px,
+        radial-gradient(circle at 70% 60%, rgba(13,110,253,.08) 0 2px, transparent 3px) 0 0/16px 16px,
+        #f6f7fb;
+    }
+    .hero{
+      background: linear-gradient(135deg, #0d6efd, #1f5fd6);
+      color:#fff;
+      border-radius: 18px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.12);
+      position:relative;
+      overflow:hidden;
+    }
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-60px; top:-60px;
+      width:220px; height:220px;
+      border-radius:50%;
+      background: rgba(255,255,255,.12);
+    }
+    .soft-card{
+      border: 1px solid rgba(0,0,0,.06);
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.08);
+      backdrop-filter: blur(2px);
+    }
+    .mini-btn{
+      font-size:.75rem;
+      padding:.35rem .6rem;
+      border-radius: .65rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .file-pill{
+      font-size:.75rem;
+      border-radius: 999px;
+      padding:.2rem .55rem;
+      border: 1px solid rgba(0,0,0,.12);
+      background:#fff;
+    }
+    .counter{
+      font-size:.85rem;
+      color:#6c757d;
+    }
+    .counter strong{ color:#0d6efd; }
+
+    .yt-preview{
+      border: 1px solid rgba(0,0,0,.08);
+      border-radius: 16px;
+      overflow:hidden;
+      background:#fff;
+      box-shadow: 0 8px 18px rgba(0,0,0,.06);
+    }
+    .yt-preview iframe{
+      width:100%;
+      aspect-ratio:16/9;
+      border:0;
+      display:block;
+    }
+  </style>
+</head>
+
+<body class="py-4">
+  <div class="container">
+    <div class="hero p-4 p-md-5 mb-4">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-4 p-3" style="background: rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.22)">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+            <path d="M12 4v4" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <path d="M7 20h10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 8l4 10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16 8l-4 10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="6.5" r="1.2" fill="white"/>
+          </svg>
+        </div>
+        <div class="flex-grow-1">
+          <h1 class="h3 mb-1 fw-bold">APRESENTAÇÃO</h1>
+          <div class="opacity-75">Preencha os campos e use os botões abaixo.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card soft-card p-3 p-md-4">
+      <div class="mb-3">
+        <h2 class="h4 fw-bold text-primary mb-1">Tópicos em destaque na página inicial</h2>
+        <p class="text-secondary mb-0">Liste até <b>04 itens</b> importantes do curso.</p>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label fw-semibold">Nome do curso</label>
+          <input type="text" class="form-control form-control-lg" id="courseName" placeholder="Digite o nome completo do curso" autocomplete="off" />
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-semibold">Sinopse (350 a 500 caracteres)</label>
+          <textarea class="form-control" id="synopsis" rows="3" placeholder="Vá direto ao ponto..."></textarea>
+          <div class="d-flex justify-content-between align-items-center mt-1">
+            <div id="synopsisHint" class="form-text">Mínimo 350 e máximo 500 caracteres.</div>
+            <div class="counter"><strong id="synopsisCount">0</strong>/500</div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-semibold">Link do vídeo no YouTube (opcional)</label>
+          <input type="url" class="form-control" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" />
+          <div class="form-text" id="youtubeStatus"></div>
+
+          <div class="yt-preview mt-3 d-none" id="youtubePreview">
+            <iframe id="youtubeIframe" allowfullscreen></iframe>
+            <div class="p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div class="small text-secondary">
+                <span class="file-pill me-2">YOUTUBE</span>
+                <span id="youtubeVideoId">—</span>
+              </div>
+              <button class="btn btn-outline-danger mini-btn" type="button" id="btnClearYoutube">Remover link</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label fw-semibold">Nível de dificuldade</label>
+          <select class="form-select" id="nivel">
+            <option value="" selected>Selecione</option>
+            <option>Iniciante</option>
+            <option>Intermediário</option>
+            <option>Avançado</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label fw-semibold">Carga horária total</label>
+          <select class="form-select" id="carga">
+            <option value="" selected>Selecione</option>
+            <option>20h</option>
+            <option>30h</option>
+            <option>40h</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="my-4" />
+
+      <div class="accordion" id="accTopics">
+        <!-- 1..4 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#t1" aria-expanded="true">Tópico 01</button>
+          </h2>
+          <div id="t1" class="accordion-collapse collapse show" data-bs-parent="#accTopics">
+            <div class="accordion-body">
+              <label class="form-label fw-semibold">Texto</label>
+              <textarea class="form-control texto" data-field="1" rows="3" placeholder="Digite o tópico 01"></textarea>
+
+              <div class="mt-3">
+                <label class="form-label fw-semibold">Anexos (somente PDF para juntar)</label>
+                <input class="form-control files" data-field="1" type="file" accept="application/pdf,.pdf" multiple />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#t2">Tópico 02</button>
+          </h2>
+          <div id="t2" class="accordion-collapse collapse" data-bs-parent="#accTopics">
+            <div class="accordion-body">
+              <label class="form-label fw-semibold">Texto</label>
+              <textarea class="form-control texto" data-field="2" rows="3" placeholder="Digite o tópico 02"></textarea>
+
+              <div class="mt-3">
+                <label class="form-label fw-semibold">Anexos (somente PDF para juntar)</label>
+                <input class="form-control files" data-field="2" type="file" accept="application/pdf,.pdf" multiple />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#t3">Tópico 03</button>
+          </h2>
+          <div id="t3" class="accordion-collapse collapse" data-bs-parent="#accTopics">
+            <div class="accordion-body">
+              <label class="form-label fw-semibold">Texto</label>
+              <textarea class="form-control texto" data-field="3" rows="3" placeholder="Digite o tópico 03"></textarea>
+
+              <div class="mt-3">
+                <label class="form-label fw-semibold">Anexos (somente PDF para juntar)</label>
+                <input class="form-control files" data-field="3" type="file" accept="application/pdf,.pdf" multiple />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#t4">Tópico 04</button>
+          </h2>
+          <div id="t4" class="accordion-collapse collapse" data-bs-parent="#accTopics">
+            <div class="accordion-body">
+              <label class="form-label fw-semibold">Texto</label>
+              <textarea class="form-control texto" data-field="4" rows="3" placeholder="Digite o tópico 04"></textarea>
+
+              <div class="mt-3">
+                <label class="form-label fw-semibold">Anexos (somente PDF para juntar)</label>
+                <input class="form-control files" data-field="4" type="file" accept="application/pdf,.pdf" multiple />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">
+        <button class="btn btn-outline-secondary fw-bold" id="btnLimpar" type="button">Limpar tudo</button>
+        <button class="btn btn-danger fw-bold" id="btnJuntar" type="button" disabled>Juntar PDFs</button>
+        <button class="btn btn-success fw-bold" id="btnDrive" type="button" disabled>Enviar</button>
+        <button class="btn btn-primary fw-bold" id="btnVoltar" type="button">Voltar</button>
+      </div>
+
+      <div class="mt-4 p-3 border rounded-4 bg-white">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+          <h4 class="h6 fw-bold mb-0">Conteúdo salvo</h4>
+          <span class="text-secondary small">PDF final + TXT + link YouTube</span>
+        </div>
+        <ul id="lista" class="list-group"></ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
