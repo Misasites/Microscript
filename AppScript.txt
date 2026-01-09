@@ -1,0 +1,104 @@
+// Code.gs
+// WebApp: recebe JSON e salva PDF + TXT + anexos no Drive
+// Salva na pasta se FOLDER_ID estiver preenchido.
+
+const FOLDER_ID = "1K_oKbFTX5x6-nGtVHh1EQkdQjFvHAEcg"; // sua pasta
+
+function doPost(e) {
+  try {
+    const raw = (e && e.postData && e.postData.contents) ? e.postData.contents : "{}";
+    const body = JSON.parse(raw);
+
+    if (!body.pdfBase64) {
+      return json_({ ok: false, error: "pdfBase64 ausente" });
+    }
+
+    const folderInfo = getFolderInfo_(); // valida acesso
+
+    // PDF
+    const pdfBytes = Utilities.base64Decode(body.pdfBase64);
+    const pdfName = body.pdfName || "pdf_unificado_com_texto.pdf";
+    const pdfBlob = Utilities.newBlob(pdfBytes, "application/pdf", pdfName);
+
+    const pdfFile = DriveApp.createFile(pdfBlob);
+    if (folderInfo.folder) pdfFile.moveTo(folderInfo.folder);
+
+    // TXT (opcional)
+    const textPlain = String(body.textPlain || "").trim();
+    let txtFileId = null;
+    if (textPlain) {
+      const txtName = body.txtName || "texto_formulario.txt";
+      const txtFile = DriveApp.createFile(txtName, textPlain, MimeType.PLAIN_TEXT);
+      if (folderInfo.folder) txtFile.moveTo(folderInfo.folder);
+      txtFileId = txtFile.getId();
+    }
+
+    // ANEXOS (opcional)
+    const attachmentIds = [];
+    const attachments = Array.isArray(body.attachments) ? body.attachments : [];
+    for (var i = 0; i < attachments.length; i++) {
+      const a = attachments[i];
+      if (!a || !a.base64) continue;
+
+      const bytes = Utilities.base64Decode(a.base64);
+      const mime = a.mimeType || "application/octet-stream";
+      const name = a.name || ("anexo_" + (i+1));
+
+      const blob = Utilities.newBlob(bytes, mime, name);
+      const file = DriveApp.createFile(blob);
+      if (folderInfo.folder) file.moveTo(folderInfo.folder);
+
+      attachmentIds.push(file.getId());
+    }
+
+    return json_({
+      ok: true,
+      debug: {
+        folderId: folderInfo.folderId || "",
+        folderName: folderInfo.folderName || "",
+        folderUrl: folderInfo.folderUrl || ""
+      },
+      pdfFileId: pdfFile.getId(),
+      txtFileId: txtFileId,
+      attachmentIds: attachmentIds
+    });
+
+  } catch (err) {
+    return json_({
+      ok: false,
+      error: String(err),
+      stack: (err && err.stack) ? String(err.stack) : ""
+    });
+  }
+}
+
+function doGet() {
+  // Diagnóstico
+  const info = getFolderInfo_();
+  return json_({
+    ok: true,
+    message: "Web App ativo. Use POST para enviar PDF.",
+    debug: {
+      folderId: info.folderId || "",
+      folderName: info.folderName || "",
+      folderUrl: info.folderUrl || "",
+      hasFolder: !!info.folder
+    }
+  });
+}
+
+function getFolderInfo_() {
+  if (!FOLDER_ID || !String(FOLDER_ID).trim()) {
+    return { folder: null, folderId: "", folderName: "", folderUrl: "" };
+  }
+  const folder = DriveApp.getFolderById(FOLDER_ID);
+  const name = folder.getName(); // força validação de permissão
+  const url = folder.getUrl();
+  return { folder, folderId: FOLDER_ID, folderName: name, folderUrl: url };
+}
+
+function json_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
